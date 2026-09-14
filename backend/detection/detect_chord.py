@@ -109,8 +109,9 @@ def identify_chord(pitch_classes, chord_type):
     return (best_candidate, best_confidence)
 def filter_voicings(voicings):
     seen = set()
+    sorted_voicings = sorted(voicings, key = lambda v: v.count(0), reverse=True)
     filtered_voicings = []
-    for voicing in voicings:
+    for voicing in sorted_voicings:
         fretted = [f for f in voicing if f > 0]
         min_fret = min(fretted) if fretted else 0
         if min_fret not in seen:
