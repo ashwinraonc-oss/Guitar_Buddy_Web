@@ -3,10 +3,57 @@ import librosa
 import glob
 import numpy as np
 import os
+from detection.data.dataBuilding.DBLookUp import chord_voicings
 
 # %%
 
 file_path = "./Unused Audio/E Major Chord.wav"
+
+note_dictionary = {0: "C", 1: "C#", 2: "D", 3: "D#", 
+                   4: "E", 5: "F", 6: "F#", 7: "G", 
+                   8: "G#", 9: "A", 10: "A#", 11: "B"}
+chord_type = {frozenset([0,4,7]): "Major",
+              frozenset([0,3,7]): "Minor",
+              frozenset([0,3,6]): "Dim",
+              frozenset([0,4,8]): "Aug",
+              frozenset([0,4,7,10]): "7",
+              frozenset([0,4,7,11]): "Maj7",
+              frozenset([0,3,7,10]): "m7",
+              frozenset([0,3,6,10]): "m7♭5",
+              frozenset([0,3,6,9]): "Dim7",
+              frozenset([0,2,7]): "sus2",
+              frozenset([0,5,7]): "sus4",
+              frozenset([0,4,7,9]): "6",
+            frozenset([0,3,7,9]): "m6",
+            frozenset([0,2,4,7]): "add9",
+            frozenset([0,2,3,7]): "m(add9)",
+            frozenset([0,2,4,7,10]): "9",
+            frozenset([0,2,4,7,11]): "Maj9",
+            frozenset([0,2,3,7,10]): "m9",
+            frozenset([0,4,8,10]): "7#5",
+            frozenset([0,1,4,7,10]): "7b9",
+            frozenset([0,3,4,7,10]): "7#9",
+            frozenset([0,5,7,10]): "7sus4",
+            frozenset([0,2,7,10]): "7sus2",
+            frozenset([0,7]): "5",         # power chord
+            frozenset([0,4,5,7]): "add11",
+            frozenset([0,4,6,10]): "7b5",
+            frozenset([0,4,6,11]): "Maj7b5",
+            frozenset([0,4,8,11]): "Maj7#5",
+            frozenset([0,2,7,11]): "Maj7sus2",
+            frozenset([0,2,5,7]): "sus2sus4",  # 2 and 4, no 3rd
+            frozenset([0,2,4,7,9]): "6/9",
+            frozenset([0,2,4,6,10]): "9b5",
+            frozenset([0,2,4,8,10]): "9#5",
+            frozenset([0,2,4,6,7,10]): "9#11",
+            frozenset([0,2,4,5,7,10]): "11",
+            frozenset([0,3,7,11]): "mMaj7",
+            frozenset([0,3,6,11]): "mMaj7♭5",
+            frozenset([0,2,3,7,9]): "m6/9",
+            frozenset([0,2,3,5,7,10]): "m11",
+            frozenset([0,2,3,5,7,11]): "mMaj11",
+            }
+quality_intervals = {name: sorted(intervals) for intervals, name in chord_type.items()}
 
 def get_onset_times(file_path):
     sample_array = []
@@ -70,5 +117,17 @@ def filter_voicings(voicings):
             seen.add(min_fret)
             filtered_voicings.append(voicing)
     return filtered_voicings
+def get_voicings(root_num, quality):
+    voicing_lookup = []
+    intervals = quality_intervals.get(quality)
+    if intervals is not None:
+        voicing_key = frozenset((root_num + iv) % 12 for iv in intervals)
+        voicing_lookup = chord_voicings.get(voicing_key) or []
+        if voicing_lookup:
+            voicing_lookup = [
+                v for v in voicing_lookup if all(fret <= 16 for fret in v if fret != -1)]
+            voicing_lookup = filter_voicings(voicing_lookup)
+    return voicing_lookup
+    
             
 

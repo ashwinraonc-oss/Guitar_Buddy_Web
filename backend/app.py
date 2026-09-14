@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 import os, tempfile
-from detection.detect_chord import detect_pitch_class, identify_chord, get_onset_times, filter_voicings
+from detection.detect_chord import detect_pitch_class, identify_chord, get_onset_times, filter_voicings, get_voicings
 from fastapi.middleware.cors import CORSMiddleware
 from detection.data.dataBuilding.DBLookUp import chord_voicings
 origins = [
@@ -69,7 +69,9 @@ app.add_middleware(
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
+@app.get("/lookup")
+async def lookup_voicing(root: int, quality: str):
+    return {"voicings": get_voicings(root, quality)}
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)):
     note_set = set()
@@ -93,23 +95,16 @@ async def detect(file: UploadFile = File(...)):
         root_num = candidate[0]
         quality = candidate[1]
         chord = root + quality
-        voicing_lookup = []
-        intervals = quality_intervals.get(quality)
-        if intervals is not None:
-            voicing_key = frozenset((root_num + iv) % 12 for iv in intervals)
-            voicing_lookup = chord_voicings.get(voicing_key)
-            if voicing_lookup is not None:
-                voicing_lookup = [
-                    v for v in voicing_lookup if all(fret <= 16 for fret in v if fret != -1)]
-                voicing_lookup = filter_voicings(voicing_lookup)
-                # seen = set()
-                # deduped = []
-                # for v in voicing_lookup:
-                #     key = tuple(v)
-                #     if key not in seen:
-                #         seen.add(key)
-                #         deduped.append(v)
-                # voicing_lookup = deduped
+        voicing_lookup = get_voicings(root_num, quality)
+        # voicing_lookup = []
+        # intervals = quality_intervals.get(quality)
+        # if intervals is not None:
+        #     voicing_key = frozenset((root_num + iv) % 12 for iv in intervals)
+        #     voicing_lookup = chord_voicings.get(voicing_key)
+        #     if voicing_lookup is not None:
+        #         voicing_lookup = [
+        #             v for v in voicing_lookup if all(fret <= 16 for fret in v if fret != -1)]
+        #         voicing_lookup = filter_voicings(voicing_lookup)
     else:
         chord = "Unknown Chord Voicing"
         voicing_lookup = []
