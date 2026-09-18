@@ -90,21 +90,12 @@ async def detect(file: UploadFile = File(...)):
     finally:os.remove(temp_path)
     
     candidate, confidence = identify_chord(note_set, chord_type)
-    if candidate is not None and confidence >= 0.5:
+    if candidate is not None and confidence >= 0.65:
         root = note_dictionary[candidate[0]]
         root_num = candidate[0]
         quality = candidate[1]
         chord = root + quality
         voicing_lookup = get_voicings(root_num, quality)
-        # voicing_lookup = []
-        # intervals = quality_intervals.get(quality)
-        # if intervals is not None:
-        #     voicing_key = frozenset((root_num + iv) % 12 for iv in intervals)
-        #     voicing_lookup = chord_voicings.get(voicing_key)
-        #     if voicing_lookup is not None:
-        #         voicing_lookup = [
-        #             v for v in voicing_lookup if all(fret <= 16 for fret in v if fret != -1)]
-        #         voicing_lookup = filter_voicings(voicing_lookup)
     else:
         chord = "Unknown Chord Voicing"
         voicing_lookup = []
