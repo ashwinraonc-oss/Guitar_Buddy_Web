@@ -51,12 +51,15 @@ def build(json_path):
                 voicings.append(abs_frets)
 
                 pcs = set()
+                played = []
                 for i, f in enumerate(abs_frets):
                     if f != -1:
                         pcs.add((STRING_OPEN_MIDI[i] + f) % 12)
+                        played.append((STRING_OPEN_MIDI[i] + f))
+                bass_note = min(played) % 12
                 tones = frozenset(pcs)
 
-                chord_voicings[tones].append(abs_frets)
+                chord_voicings[tones].append((bass_note, abs_frets))
                 contributors[tones].append((root_name, suffix))
 
             guitar_chords[(root_name, suffix)] = voicings

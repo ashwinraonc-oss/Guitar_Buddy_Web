@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 import os, tempfile
-from detection.detect_chord import detect_pitch_class, identify_chord, get_onset_times, filter_voicings, get_voicings
+from detection.detect_chord import detect_midi, identify_chord, get_onset_times, get_voicings
 from fastapi.middleware.cors import CORSMiddleware
 from detection.data.dataBuilding.DBLookUp import chord_voicings
 origins = [
@@ -55,7 +55,6 @@ chord_type = {frozenset([0,4,7]): "Major",
             }
 quality_intervals = {name: sorted(intervals) for intervals, name in chord_type.items()}
 
-
 app = FastAPI()
 
 app.add_middleware(
@@ -76,16 +75,21 @@ async def lookup_voicing(root: int, quality: str):
 async def detect(file: UploadFile = File(...)):
     note_set = set()
     contents = await file.read()
+    midi_notes = []
     with tempfile.NamedTemporaryFile(delete = False, suffix = ".wav") as tmp:
         tmp.write(contents)
         temp_path = tmp.name
-    
     try:
         note_array, sr = get_onset_times(temp_path)
         for note in note_array:
-            pitch_class = detect_pitch_class(note, sr)
-            if pitch_class is not None:
-                note_set.add(pitch_class)
+            midi = detect_midi(note, sr)
+            if midi is not None:
+                midi_notes.append(midi)
+        note_set = {n % 12 for n in midi_notes}
+        if midi_notes:
+            detected_bass = min(midi_notes) % 12
+        else:
+            detected_bass = None
 
     finally:os.remove(temp_path)
     
@@ -95,7 +99,7 @@ async def detect(file: UploadFile = File(...)):
         root_num = candidate[0]
         quality = candidate[1]
         chord = root + quality
-        voicing_lookup = get_voicings(root_num, quality)
+        voicing_lookup = get_voicings(root_num, quality, detected_bass)
     else:
         chord = "Unknown Chord Voicing"
         voicing_lookup = []

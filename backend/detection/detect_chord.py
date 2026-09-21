@@ -85,7 +85,7 @@ def frequency_to_pitch(freq) -> int:
 
 #Takes one audio chunk from the return value of get_onset_times 
 #and determines what musical letter note it is if a pitch can be surmised.
-def detect_pitch_class(raw, sr) -> int | None:
+def detect_midi(raw, sr) -> int | None:
     f0, voiced_flag, voiced_probs = librosa.pyin(raw, 
                                                 sr=sr, 
                                                 fmin=librosa.note_to_hz('C2'),
@@ -98,10 +98,9 @@ def detect_pitch_class(raw, sr) -> int | None:
 
     masked_notes = f0[mask]
     note_frequency = np.nanmedian(masked_notes)
-    note_number = frequency_to_pitch(note_frequency)
-    pitch_class = (round(note_number)%12)
+    note_number = round(frequency_to_pitch(note_frequency))
+    return note_number
 
-    return pitch_class
 def identify_chord(pitch_classes, chord_type):
     best_confidence = float("-inf")
     best_candidate = None
@@ -130,24 +129,23 @@ def filter_voicings(voicings):
 
 #Sorts the voicings by the number of open strings in the voicing in ascending order.
 #Also deduplicates the voicings list in case multiple exact voicings are returned.
-def sort_voicings(voicings):
-    deduped = list({tuple(v): v for v in voicings}.values())
-    sorted_voicings = sorted(deduped, key = lambda v: v.count(0), reverse=True)
+def sort_voicings(voicings, detected_bass = None):
+    deduped = list({tuple(frets): (bass, frets) for bass, frets in voicings}.values())
+    sorted_voicings = sorted(deduped, key=lambda bf: (bf[0] != detected_bass, -bf[1].count(0)))
     return sorted_voicings
 
 #Frontend inputs the root of a chord as its integer value and the type of chord (quality)
 #Then returns the list of guitar voicings associated with the input chord
-def get_voicings(root_num, quality):
+def get_voicings(root_num, quality, detected_bass = None):
     voicing_lookup = []
     intervals = quality_intervals.get(quality)
     if intervals is not None:
         voicing_key = frozenset((root_num + iv) % 12 for iv in intervals)
         voicing_lookup = chord_voicings.get(voicing_key) or []
         if voicing_lookup:
-            voicing_lookup = [
-                v for v in voicing_lookup if all(fret <= 16 for fret in v if fret != -1)]
-            voicing_lookup = sort_voicings(voicing_lookup)
-    return voicing_lookup
+            voicing_lookup = [(b, v) for b, v in voicing_lookup if all(fret <= 16 for fret in v if fret != -1)]
+            voicing_lookup = sort_voicings(voicing_lookup, detected_bass)
+    return [frets for _, frets in voicing_lookup]
     
             
 
