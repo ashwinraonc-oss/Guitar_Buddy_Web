@@ -111,7 +111,7 @@ async def detect(file: UploadFile = File(...)):
             "score": round(confidence), 
             "notes": sorted(note_set),
             "note_names": [note_dictionary[n] for n in sorted(note_set)],
-            "midi_notes": sorted(set(midi_notes)),
+            "midi_notes": [min(m for m in midi_notes if m % 12 == n) for n in sorted(note_set)],
             "root": res_root, 
             "voicing": voicing_lookup}
 
