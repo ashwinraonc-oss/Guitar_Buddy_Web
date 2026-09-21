@@ -57,16 +57,18 @@ chord_type = {frozenset([0,4,7]): "Major",
             }
 quality_intervals = {name: sorted(intervals) for intervals, name in chord_type.items()}
 
+#takes audio from user, trims the start and end of the file, 
+#then finds the points at which the audio file peaks.
+#Returns an array of a list of amplitudes of the onsets.
 def get_onset_times(file_path):
-    sample_array = []
-    note_array = []
+    sample_array = [] #holds index of each onset start
+    note_array = [] #holds the actual audio chunks of the recording
     y, sr = librosa.load(file_path)
     y, _ = librosa.effects.trim(y)
     start_trim = int(0.3*sr)
     end_trim = int(0.3*sr)
     y = y[start_trim:-end_trim]
     onset_times = librosa.onset.onset_detect(y=y, sr=sr, units = 'time', delta = 0.12)
-    print(onset_times)
     for time in onset_times:
         sample_idx = int(time * sr)
         sample_array.append(sample_idx)
@@ -76,10 +78,13 @@ def get_onset_times(file_path):
 
     return (note_array, sr)
 
+#converts frequency of the detected note to a MIDI note using standard MIDI formula
 def frequency_to_pitch(freq) -> int:
     midi = 12 * np.log2((freq / 440)) + 69
     return midi
 
+#Takes one audio chunk from the return value of get_onset_times 
+#and determines what musical letter note it is if a pitch can be surmised.
 def detect_pitch_class(raw, sr) -> int | None:
     f0, voiced_flag, voiced_probs = librosa.pyin(raw, 
                                                 sr=sr, 
@@ -109,6 +114,7 @@ def identify_chord(pitch_classes, chord_type):
                 best_confidence = confidence
                 best_candidate = (root, name)
     return (best_candidate, best_confidence)
+
 #Function to filter voicings by their minimum fret. In other words if 2 voicings both start at the 5th fret, for example, remove one of them.
 def filter_voicings(voicings):
     seen = set()
@@ -121,10 +127,16 @@ def filter_voicings(voicings):
             seen.add(min_fret)
             filtered_voicings.append(voicing)
     return filtered_voicings
+
+#Sorts the voicings by the number of open strings in the voicing in ascending order.
+#Also deduplicates the voicings list in case multiple exact voicings are returned.
 def sort_voicings(voicings):
     deduped = list({tuple(v): v for v in voicings}.values())
     sorted_voicings = sorted(deduped, key = lambda v: v.count(0), reverse=True)
     return sorted_voicings
+
+#Frontend inputs the root of a chord as its integer value and the type of chord (quality)
+#Then returns the list of guitar voicings associated with the input chord
 def get_voicings(root_num, quality):
     voicing_lookup = []
     intervals = quality_intervals.get(quality)

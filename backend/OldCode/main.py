@@ -1,5 +1,5 @@
 from backend.detection.RecordAudio import record_audio
-from backend.detection.IdentifyChord import identify_chord, detect_pitch_class
+from backend.OldCode.IdentifyChord import identify_chord, detect_pitch_class
 
 
 note_dictionary = {0: "C", 1: "C#", 2: "D", 3: "D#", 

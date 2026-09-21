@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 import os, tempfile
-from detection.IdentifyChord import detect_pitch_class, identify_chord
+from backend.OldCode.IdentifyChord import detect_pitch_class, identify_chord
 from fastapi.middleware.cors import CORSMiddleware
 origins = [
     "http://localhost:5173",
