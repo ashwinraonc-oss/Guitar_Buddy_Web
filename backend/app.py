@@ -98,6 +98,8 @@ async def detect(file: UploadFile = File(...)):
         root = note_dictionary[candidate[0]]
         root_num = candidate[0]
         quality = candidate[1]
+        root_midi = min(m for m in midi_notes if m % 12 == root_num)
+        chord_midi = [root_midi + iv for iv in quality_intervals[quality]]
         chord_notes = frozenset((root_num + iv) % 12 for iv in quality_intervals[quality])
         chord = root + quality
         voicing_lookup = get_voicings(root_num, quality, detected_bass)
@@ -105,6 +107,7 @@ async def detect(file: UploadFile = File(...)):
         chord = "Unknown Chord Voicing"
         voicing_lookup = []
         chord_notes = []
+        chord_midi = []
     if candidate is not None:
         res_root, quality = candidate
     res_root = candidate[0] if candidate is not None else None
@@ -113,6 +116,7 @@ async def detect(file: UploadFile = File(...)):
             "score": round(confidence),
             "chord_notes": sorted(chord_notes),
             "chord_notes_names": [note_dictionary[n] for n in sorted(chord_notes)],
+            "chord_notes_names_midi": sorted(chord_midi, key=lambda m: m % 12),
             "notes": sorted(note_set),
             "note_names": [note_dictionary[n] for n in sorted(note_set)],
             "midi_notes": [min(m for m in midi_notes if m % 12 == n) for n in sorted(note_set)],
