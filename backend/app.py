@@ -112,15 +112,16 @@ async def detect(file: UploadFile = File(...)):
         res_root, quality = candidate
     res_root = candidate[0] if candidate is not None else None
     confidence = (confidence * 100) if candidate is not None else 0
-    return {"chord": chord, 
-            "score": round(confidence),
-            "chord_notes": sorted(chord_notes),
-            "chord_notes_names": [note_dictionary[n] for n in sorted(chord_notes)],
-            "chord_notes_names_midi": sorted(chord_midi, key=lambda m: m % 12),
-            "notes": sorted(note_set),
-            "note_names": [note_dictionary[n] for n in sorted(note_set)],
-            "midi_notes": [min(m for m in midi_notes if m % 12 == n) for n in sorted(note_set)],
-            "root": res_root, 
-            "voicing": voicing_lookup}
+    return {"chord": chord, #name of chord (root letter + quality)
+            "score": round(confidence), #confidence score of match
+            "chord_notes": sorted(chord_notes), #pitch classes of the notes in the detected chord
+            "chord_notes_names": [note_dictionary[n] for n in sorted(chord_notes)], #letter names of notes in detected chord
+            "chord_notes_names_midi": sorted(chord_midi, key=lambda m: m % 12), #the midi notes of the notes in the detected chord
+            "notes": sorted(note_set), #the pitch classes of the notes detected from the actual audio file
+            "note_names": [note_dictionary[n] for n in sorted(note_set)], #the names of the notes detected in the actual audio file
+            "midi_notes": [min(m for m in midi_notes if m % 12 == n) for n in sorted(note_set)], #the midi notes of the notes detected in the actual audio file
+            "root": res_root, #the root pitch class of the detected chord
+            "voicing": voicing_lookup #the guitar fret voicings returned from looking up the pitch class of the detected chord
+            }
 
 
