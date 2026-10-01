@@ -106,7 +106,7 @@ def detect_midi(raw, sr) -> int | None:
     note_number = round(frequency_to_pitch(note_frequency))
     return note_number
 
-def identify_chord(pitch_classes, chord_type):
+def identify_chord(pitch_classes, chord_type, detected_bass):
     best_confidence = float("-inf")
     best_candidate = None
     for root in pitch_classes:
@@ -117,6 +117,10 @@ def identify_chord(pitch_classes, chord_type):
             if confidence > best_confidence:
                 best_confidence = confidence
                 best_candidate = (root, name)
+            elif confidence == best_confidence and root == detected_bass:
+                best_confidence = confidence
+                best_candidate = (root, name)
+
     return (best_candidate, best_confidence)
 
 #Function to filter voicings by their minimum fret. In other words if 2 voicings both start at the 5th fret, for example, remove one of them.

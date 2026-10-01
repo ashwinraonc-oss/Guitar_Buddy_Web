@@ -96,7 +96,7 @@ def detect(file: UploadFile = File(...)):
 
     finally:os.remove(temp_path)
     
-    candidate, confidence = identify_chord(note_set, chord_type)
+    candidate, confidence = identify_chord(note_set, chord_type, detected_bass)
     if candidate is not None and confidence >= 0.65:
         root = note_dictionary[candidate[0]]
         root_num = candidate[0]
