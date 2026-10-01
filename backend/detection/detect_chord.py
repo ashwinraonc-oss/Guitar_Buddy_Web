@@ -71,6 +71,8 @@ def get_onset_times(file_path):
     start_trim = int(0.3*sr)
     end_trim = int(0.3*sr)
     y = y[start_trim:-end_trim]
+    if len(y) == 0:
+        return ([], 0)
     onset_times = librosa.onset.onset_detect(y=y, sr=sr, units = 'time', delta = 0.12)
     for time in onset_times:
         sample_idx = int(time * sr)

@@ -75,9 +75,9 @@ def health():
 async def lookup_voicing(root: int, quality: str):
     return {"voicings": get_voicings(root, quality)}
 @app.post("/detect")
-async def detect(file: UploadFile = File(...)):
+def detect(file: UploadFile = File(...)):
     note_set = set()
-    contents = await file.read()
+    contents = file.file.read()
     midi_notes = []
     with tempfile.NamedTemporaryFile(delete = False, suffix = ".wav") as tmp:
         tmp.write(contents)
