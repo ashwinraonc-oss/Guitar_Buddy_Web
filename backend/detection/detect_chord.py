@@ -54,6 +54,9 @@ chord_type = {frozenset([0,4,7]): "Major",
                 frozenset([0,2,3,7,9]): "m6/9",
                 frozenset([0,2,3,5,7,10]): "m11",
                 frozenset([0,2,3,5,7,11]): "mMaj11",
+                frozenset([0,2,4,7,9,10]): "13",
+                frozenset([0,2,4,7,9,11]): "Maj13",
+                frozenset([0,2,3,7,11]): "mMaj9",
             }
 quality_intervals = {name: sorted(intervals) for intervals, name in chord_type.items()}
 
